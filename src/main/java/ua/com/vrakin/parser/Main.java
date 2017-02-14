@@ -7,50 +7,77 @@ import org.jsoup.select.Elements;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.*;
 
 public class Main {
 
     public static final String LINK = "http://obeyclothing.com";
 
-    public static void main(String[] args) throws IOException {
-        List<Category> menCategories = linkListMen("men");
-        List<Category> womenCategories = linkListMen("women");
+    public static void main(String[] args) throws IOException, InterruptedException {
+        Set<Category> menCategories = linkListMen("men");
+        Set<Category> womenCategories = linkListMen("women");
 
-        menCategories.forEach(category -> {
-            try {
-                List<Record> records = new ArrayList<>();
-                int i = 1;
-                do{
-                    String url = category.getUrl();
-                    if (i>1){
-                        url += "?page=" + i;
-                    }
-                    i++;
-                    recordList(url).forEach(record -> records.add(record));
-                }while (i < category.getPageCount());
-                category.setRecords(records);
-            } catch (IOException e) {
-                e.printStackTrace();
-                System.out.println(e.getMessage());
-                System.out.println(category);
-            }
-        });
-    /*    womenCategories.forEach(category -> {
-            try {
-                category.setRecords(recordList(category.getUrl()));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        });
-*/
+        System.out.println("MEN");
+        createRecordListForCategory(menCategories);
+        System.out.println("WOMEN");
+        createRecordListForCategory(womenCategories);
+
+        System.out.println("MEN");
         menCategories.forEach(System.out::println);
         System.out.println("WOMEN");
         womenCategories.forEach(System.out::println);
     }
 
-    private static List<Record> recordList(String link) throws IOException {
-        List<Record> records = new ArrayList<>();
+    private static void createRecordListForCategory(Set<Category> menCategories) throws InterruptedException {
+        List<Callable<String>> callables = new ArrayList<>();
+
+        menCategories.forEach(category -> callables.add(() -> createRecordList(category)));
+
+        ExecutorService executor = Executors.newFixedThreadPool(10);
+        executor.invokeAll(callables);
+        executor.shutdown();
+    }
+
+    private static String createRecordList(Category category) {
+        String result = "Error in thread";
+        try {
+            ConcurrentLinkedQueue<Product> products = category.getProducts();
+            int i = 1;
+            do{
+                String url = category.getUrl();
+                if (i>1){
+                    url += "?page=" + i;
+                }
+                i++;
+                List<Callable<List<Product>>> callables = new ArrayList<>();
+                String finalUrl = url;
+                callables.add(()->recordList(finalUrl));
+                ExecutorService executor = Executors.newFixedThreadPool(10);
+                List<Future<List<Product>>> futures = executor.invokeAll(callables);
+                executor.shutdown();
+                futures.forEach(f -> {
+                    try {
+                        f.get().forEach(products::add);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    } catch (ExecutionException e) {
+                        e.printStackTrace();
+                    }
+                });
+            }while (i < category.getPageCount());
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        result = "Thread for category " + category.getTitle() + " finish";
+        System.out.println(result);
+        return result;
+    }
+
+    private static List<Product> recordList(String link) throws IOException {
+        List<Product> products = new ArrayList<>();
 
         Document document = Jsoup.connect(link).get();
 
@@ -70,24 +97,26 @@ public class Main {
                 e.printStackTrace();
             }
 
+            Element divElement = element.getElementsByAttributeValue("class", "product-images").first();
+
+            Set<String> images = new HashSet<>();
+
+            divElement.children().forEach(el -> images.add(el.attr("src")));
+
             Element imageElement = aElement.child(0);
-            String image = imageElement.attr("src");
-            if (image.length() > 0) {
-                image = LINK + image.substring(1);
-            }
             String name = imageElement.attr("alt");
 
             Element pElement = element.getElementsByAttributeValue("class", "grid-item-info").first().child(1);
             String price = pElement.text();
 
-            records.add(new Record(name, recordLink, price, image, description));
+            products.add(new Product(name, recordLink, price, images, description));
         });
 
-        return records;
+        return products;
     }
 
-    private static List<Category> linkListMen(String sex) throws IOException {
-        List<Category> links = new ArrayList<>();
+    private static Set<Category> linkListMen(String sex) throws IOException {
+        Set<Category> links = new HashSet<>();
 
         Document document = Jsoup.connect(LINK + "/collections/" + sex).get();
 

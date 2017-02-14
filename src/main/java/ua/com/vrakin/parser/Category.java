@@ -1,63 +1,61 @@
 package ua.com.vrakin.parser;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class Category {
 
     private String url;
-    private String name;
+    private String title;
     private int pageCount;
 
-    public int getPageCount() {
+    int getPageCount() {
         return pageCount;
     }
 
-    public void setPageCount(int pageCount) {
+    void setPageCount(int pageCount) {
         this.pageCount = pageCount;
     }
 
-    public String getUrl() {
+    String getUrl() {
         return url;
     }
 
-    public void setUrl(String url) {
+    void setUrl(String url) {
         this.url = url;
     }
 
-    public String getName() {
-        return name;
+    String getTitle() {
+        return title;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    void setTitle(String title) {
+        this.title = title;
     }
 
-    private List<Record> records;
+    private ConcurrentLinkedQueue<Product> products;
 
-    public List<Record> getRecords() {
-        return records;
+    ConcurrentLinkedQueue<Product> getProducts() {
+        return products;
     }
 
-    public void setRecords(List<Record> records) {
-        this.records = records;
+    void setProducts(ConcurrentLinkedQueue<Product> products) {
+        this.products = products;
     }
 
-    public Category(String url, String name, int pageCount) {
+    Category(String url, String title, int pageCount) {
         this.url = url;
-        this.name = name;
-        this.records = new ArrayList<>();
+        this.title = title;
+        this.products = new ConcurrentLinkedQueue<>();
         this.pageCount = pageCount;
     }
 
     @Override
     public String toString() {
-        final String[] result = {"Category{" +
-                "pageCount='" + pageCount + '\'' +
+        final String[] result = {"[{\"category\":" +
                 "url='" + url + '\'' +
-                ", name='" + name + '\'' +
-                ", records="};
-        records.forEach(record -> result[0] += record.toString());
+                ", title='" + title + '\'' +
+                ", products="};
+        products.forEach(product -> result[0] += product.toString());
         result[0] += "}";
         return result[0];
     }
