@@ -14,10 +14,22 @@ public class Product {
 
     private String description;
 
+    private String discount;
+
+    public String getDiscount() {
+        return discount;
+    }
+
+    public void setDiscount(String discount) {
+        this.discount = discount;
+    }
+
     public Product(String title, String link, String price, Set<String> image, String description) {
         this.title = title;
         this.link = link;
         this.price = price;
+        this.discount = price.substring(price.lastIndexOf('$'));
+        if (price.equals(discount)) discount="";
         this.images = image;
         this.description = description;
     }
@@ -63,7 +75,7 @@ public class Product {
     }
 
     private String printImages(){
-        StringBuilder stringBuilder = new StringBuilder("{\"images\": [");
+        StringBuilder stringBuilder = new StringBuilder("\"images\": [");
         images.forEach(im -> {
             stringBuilder.append("\"" + im + "\",");
         });
@@ -76,12 +88,12 @@ public class Product {
 
     @Override
     public String toString() {
-        return "Product{" +
-                "title='" + title + '\'' +
-                ", link='" + link + '\'' +
-                ", price='" + price + '\'' +
+        return "{" +
+                "\"title\":\"" + title + '\"' +
+                ", \"price\":\"" + price + '\"' +
+                ", \"discount\":\"" + discount + '\"' +
                 ", " + printImages() +
-                ", description='" + description + '\'' +
-                '}';
+                ", \"description=\"" + description + '\"' +
+                "},";
     }
 }

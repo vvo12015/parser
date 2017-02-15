@@ -51,10 +51,9 @@ public class Category {
 
     @Override
     public String toString() {
-        final String[] result = {"[{\"category\":" +
-                "url='" + url + '\'' +
-                ", title='" + title + '\'' +
-                ", products="};
+        final String[] result = {"{\"category\":" +
+                "{\"title\":\"" + title + "\"}" +
+                ", \"products\":["};
         products.forEach(product -> result[0] += product.toString());
         result[0] += "}";
         return result[0];

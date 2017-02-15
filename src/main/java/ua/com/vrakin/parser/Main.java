@@ -5,6 +5,8 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import java.io.BufferedReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -21,20 +23,42 @@ public class Main {
         Set<Category> womenCategories = linkListMen("women");
 
         System.out.println("MEN");
-        createRecordListForCategory(menCategories);
-        System.out.println("WOMEN");
-        createRecordListForCategory(womenCategories);
+        createRecordListForCategory(menCategories, womenCategories);
 
-        System.out.println("MEN");
-        menCategories.forEach(System.out::println);
-        System.out.println("WOMEN");
-        womenCategories.forEach(System.out::println);
+        try (FileWriter fileWriter = new FileWriter("src/main/resources/jsonObey.json")){
+
+
+        fileWriter.write("{\"shop\"{\"url\": \"" + LINK + "\", \"logo\":\"OBEY\", \"title\":\"Obey Clothing\"},");
+        fileWriter.write("\"collections\": [");
+        fileWriter.write("{\"category\": {\"title\":\"men\"}, \"categories\":[");
+        menCategories.forEach(c -> {
+            try {
+                fileWriter.write(c.toString());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+        fileWriter.write("]},");
+        fileWriter.write("{\"category\": {\"title\":\"women\"}, \"categories\":[");
+        womenCategories.forEach(c -> {
+            try {
+                fileWriter.write(c.toString());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+        fileWriter.write("]}]");}
+        catch (IOException e){
+            e.printStackTrace();
+        }
     }
 
-    private static void createRecordListForCategory(Set<Category> menCategories) throws InterruptedException {
+    private static void createRecordListForCategory(Set<Category> menCategories,
+                                                    Set<Category> womenCategories) throws InterruptedException {
         List<Callable<String>> callables = new ArrayList<>();
 
         menCategories.forEach(category -> callables.add(() -> createRecordList(category)));
+        womenCategories.forEach(category -> callables.add(() -> createRecordList(category)));
 
         ExecutorService executor = Executors.newFixedThreadPool(10);
         executor.invokeAll(callables);
