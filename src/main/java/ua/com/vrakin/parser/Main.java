@@ -22,7 +22,6 @@ public class Main {
         Set<Category> menCategories = linkListMen("men");
         Set<Category> womenCategories = linkListMen("women");
 
-        System.out.println("MEN");
         createRecordListForCategory(menCategories, womenCategories);
 
         try (FileWriter fileWriter = new FileWriter("src/main/resources/jsonObey.json")){
@@ -184,11 +183,21 @@ public class Main {
     public static String getDescription(String link) throws IOException {
 
         Document document = Jsoup.connect(link).get();
+        StringBuilder result = new StringBuilder("");
 
         Element divElement = document.getElementsByAttributeValue("class", "product-info-description js-sticky_hide")
                 .first();
-        Element pElement = divElement.child(1);
 
-        return pElement.text();
+        for (int i = 0; i < divElement.children().size()-3; i++) {
+            Element pElement = divElement.child(i);
+
+            String pText = pElement.text();
+
+            if (!pText.contains("Sku")) {
+                result.append(pElement.text() + "\n");
+            }
+        }
+
+        return result.toString();
     }
 }

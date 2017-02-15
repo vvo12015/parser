@@ -76,9 +76,7 @@ public class Product {
 
     private String printImages(){
         StringBuilder stringBuilder = new StringBuilder("\"images\": [");
-        images.forEach(im -> {
-            stringBuilder.append("\"" + im + "\",");
-        });
+        images.forEach(im -> stringBuilder.append("\"" + im + "\","));
         stringBuilder.deleteCharAt(stringBuilder.length()-1);
 
         stringBuilder.append("]");
@@ -93,7 +91,7 @@ public class Product {
                 ", \"price\":\"" + price + '\"' +
                 ", \"discount\":\"" + discount + '\"' +
                 ", " + printImages() +
-                ", \"description=\"" + description + '\"' +
+                ", \"description:\"" + description + '\"' +
                 "},";
     }
 }
